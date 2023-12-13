@@ -3,7 +3,7 @@
 //
 // A simple grammar for an infix expression arithmetic calculator.
 //
-// All arithmetic is done using i64 types.  At some point I might add support
+// All arithmetic is done using i128 types.  At some point I might add support
 // for u64/i32/u32 types.
 //
 // The whitespace token placement in the grammar could probably be optimized
@@ -12,27 +12,27 @@
 
 _ = #quiet<[ \t\n\r]*>
 
-dec_lit -> i64 = n:$([0-9] ([0-9] / "_")*) {
-    i64::from_str_radix(&*n.replace("_", ""), 10).unwrap()
+dec_lit -> i128 = n:$([0-9] ([0-9] / "_")*) {
+    i128::from_str_radix(&*n.replace("_", ""), 10).unwrap()
 }
 
-hex_lit -> i64 = "0x" n:$([0-9a-fA-F_]+) {
-    i64::from_str_radix(&*n.replace("_", ""), 16).unwrap()
+hex_lit -> i128 = "0x" n:$([0-9a-fA-F_]+) {
+    i128::from_str_radix(&*n.replace("_", ""), 16).unwrap()
 }
 
-bin_lit -> i64 = "0b" n:$([01_]+) {
-    i64::from_str_radix(&*n.replace("_", ""), 2).unwrap()
+bin_lit -> i128 = "0b" n:$([01_]+) {
+    i128::from_str_radix(&*n.replace("_", ""), 2).unwrap()
 }
 
-oct_lit -> i64 = "0o" n:$([0-7_]+) {
-    i64::from_str_radix(&*n.replace("_", ""), 8).unwrap()
+oct_lit -> i128 = "0o" n:$([0-7_]+) {
+    i128::from_str_radix(&*n.replace("_", ""), 8).unwrap()
 }
 
-num_lit -> i64 = n:#quiet<(hex_lit / oct_lit / bin_lit / dec_lit)> {
+num_lit -> i128 = n:#quiet<(hex_lit / oct_lit / bin_lit / dec_lit)> {
     n
 } / #expected("numeric literal")
 
-unary_expr -> i64 = _ un_op:$([-~]) _ n:atom {
+unary_expr -> i128 = _ un_op:$([-~]) _ n:atom {
     match un_op {
         "~" => !n,
         "-" => -n,
@@ -41,11 +41,11 @@ unary_expr -> i64 = _ un_op:$([-~]) _ n:atom {
 }
 
 // see suggestion at https://github.com/kevinmehall/rust-peg/issues/167
-atom -> i64 = _ "(" _ v:infix_arith _ ")" _ { v }
+atom -> i128 = _ "(" _ v:infix_arith _ ")" _ { v }
             / _ v:unary_expr _ { v }
             / _ v:num_lit _ { v }
 
-infix_arith -> i64 = #infix<atom> {
+infix_arith -> i128 = #infix<atom> {
     #L x "|" y  { x | y }
 
     #L x "^" y  { x ^ y }
@@ -65,4 +65,4 @@ infix_arith -> i64 = #infix<atom> {
     #L x "**" y { x.pow(y as u32) }
 }
 
-pub expr -> i64 = _ v:(infix_arith / unary_expr / num_lit) _ { v }
+pub expr -> i128 = _ v:(infix_arith / unary_expr / num_lit) _ { v }

@@ -12,13 +12,14 @@ A programmer's calculator supporting multiple radixes.
 
 Version ", env!("CARGO_PKG_VERSION"), "
 
-Usage: radix-calc [--alfred2] [--all|--bin|--hex|--oct] [--] <expr>...
+Usage: radix-calc [--alfred2] [--all] [--dec] [--bin] [--hex] [--oct] [--] <expr>...
        radix-calc (-h | --help)
 
 Options:
     -h, --help   Show this screen.
     --alfred2    Emit Alfred2-style workflow XML.
     --all        Format the result in decimal, hex, octal, and binary
+    --dec        Format the result in decimal (e.g., 12345)
     --bin        Format the result in binary (e.g., 0b0110)
     --hex        Format the result in hexadecimal (e.g., 0xcafe)
     --oct        Format the result in Rust-style octal (e.g., 0o755)
@@ -28,6 +29,7 @@ Options:
 struct Args {
     flag_alfred2: bool,
     flag_all: bool,
+    flag_dec: bool,
     flag_bin: bool,
     flag_hex: bool,
     flag_oct: bool,
@@ -54,19 +56,19 @@ mod radix_calc {
         buf
     }
 
-    pub fn to_pretty_dec(expr: i64) -> String {
+    pub fn to_pretty_dec(expr: i128) -> String {
         to_pretty("", &expr.to_string(), 3)
     }
 
-    pub fn to_pretty_hex(expr: i64) -> String {
+    pub fn to_pretty_hex(expr: i128) -> String {
         to_pretty("0x", &format!("{:x}", expr), 4)
     }
 
-    pub fn to_pretty_oct(expr: i64) -> String {
+    pub fn to_pretty_oct(expr: i128) -> String {
         to_pretty("0o", &format!("{:o}", expr), 3)
     }
 
-    pub fn to_pretty_bin(expr: i64) -> String {
+    pub fn to_pretty_bin(expr: i128) -> String {
         to_pretty("0b", &format!("{:b}", expr), 8)
     }
 
@@ -142,26 +144,26 @@ fn emit_alfred2(expr_str: &str) {
 <items>
   <item arg=\"{expr}\" valid=\"YES\" autocomplete=\"{pretty_dec}\" type=\"default\">
     <title>{pretty_dec}</title>
-    <subtitle>copy+paste as \"{expr}\"</subtitle>
-    <mod key=\"shift\" subtitle=\"copy+paste as &quot;{pretty_dec}&quot;\" valid=\"yes\" arg=\"{pretty_dec}\"/>
+    <subtitle>copy as \"{expr}\"</subtitle>
+    <mod key=\"shift\" subtitle=\"copy as &quot;{pretty_dec}&quot;\" valid=\"yes\" arg=\"{pretty_dec}\"/>
     <icon>dec.png</icon>
   </item>
   <item arg=\"0x{expr:x}\" valid=\"YES\" autocomplete=\"{pretty_hex}\" type=\"default\">
     <title>{pretty_hex}</title>
-    <subtitle>copy+paste as \"0x{expr:x}\"</subtitle>
-    <mod key=\"shift\" subtitle=\"copy+paste as &quot;{pretty_hex}&quot;\" valid=\"yes\" arg=\"{pretty_hex}\"/>
+    <subtitle>copy as \"0x{expr:x}\"</subtitle>
+    <mod key=\"shift\" subtitle=\"copy as &quot;{pretty_hex}&quot;\" valid=\"yes\" arg=\"{pretty_hex}\"/>
     <icon>hex.png</icon>
   </item>
   <item arg=\"0o{expr:o}\" valid=\"YES\" autocomplete=\"{pretty_oct}\" type=\"default\">
     <title>{pretty_oct}</title>
-    <subtitle>copy+paste as \"0o{expr:o}\"</subtitle>
-    <mod key=\"shift\" subtitle=\"copy+paste as &quot;{pretty_oct}&quot;\" valid=\"yes\" arg=\"{pretty_oct}\"/>
+    <subtitle>copy as \"0o{expr:o}\"</subtitle>
+    <mod key=\"shift\" subtitle=\"copy as &quot;{pretty_oct}&quot;\" valid=\"yes\" arg=\"{pretty_oct}\"/>
     <icon>oct.png</icon>
   </item>
   <item arg=\"0b{expr:b}\" valid=\"YES\" autocomplete=\"{pretty_bin}\" type=\"default\">
     <title>{pretty_bin}</title>
-    <subtitle>copy+paste as \"0b{expr:b}\"</subtitle>
-    <mod key=\"shift\" subtitle=\"copy+paste as &quot;{pretty_bin}&quot;\" valid=\"yes\" arg=\"{pretty_bin}\"/>
+    <subtitle>copy as \"0b{expr:b}\"</subtitle>
+    <mod key=\"shift\" subtitle=\"copy as &quot;{pretty_bin}&quot;\" valid=\"yes\" arg=\"{pretty_bin}\"/>
     <icon>bin.png</icon>
   </item>
 </items>
@@ -206,14 +208,23 @@ fn main() {
                     println!("0x{:x}", expr);
                     println!("0o{:o}", expr);
                     println!("0b{:b}", expr);
-                } else if args.flag_bin {
-                    println!("0b{:b}", expr);
-                } else if args.flag_hex {
-                    println!("0x{:x}", expr);
-                } else if args.flag_oct {
-                    println!("0o{:o}", expr);
-                } else {
+                    return;
+                }
+
+                if args.flag_dec || (
+                         !args.flag_bin 
+                      && !args.flag_hex 
+                      && !args.flag_oct) {
                     println!("{:}", expr);
+                } 
+                if args.flag_bin {
+                    println!("0b{:b}", expr);
+                } 
+                if args.flag_hex {
+                    println!("0x{:x}", expr);
+                } 
+                if args.flag_oct {
+                    println!("0o{:o}", expr);
                 }
             }
             Err(err) => {
