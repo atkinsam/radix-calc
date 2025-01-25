@@ -32,6 +32,10 @@ num_lit -> i128 = n:#quiet<(hex_lit / oct_lit / bin_lit / dec_lit)> {
     n
 } / #expected("numeric literal")
 
+expr_log2 -> i128 = "log2(" n:atom ")" {
+    n.ilog2() as i128
+}
+
 unary_expr -> i128 = _ un_op:$([-~]) _ n:atom {
     match un_op {
         "~" => !n,
@@ -44,6 +48,7 @@ unary_expr -> i128 = _ un_op:$([-~]) _ n:atom {
 atom -> i128 = _ "(" _ v:infix_arith _ ")" _ { v }
             / _ v:unary_expr _ { v }
             / _ v:num_lit _ { v }
+            / _ v:expr_log2 _ { v }
 
 infix_arith -> i128 = #infix<atom> {
     #L x "|" y  { x | y }
@@ -65,4 +70,4 @@ infix_arith -> i128 = #infix<atom> {
     #L x "**" y { x.pow(y as u32) }
 }
 
-pub expr -> i128 = _ v:(infix_arith / unary_expr / num_lit) _ { v }
+pub expr -> i128 = _ v:(infix_arith / unary_expr / num_lit / expr_log2) _ { v }
