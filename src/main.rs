@@ -1,6 +1,8 @@
 // Copyright 2017 Dave Goodell <dave@goodell.io>
 // See LICENSE file for license terms (MIT license)
 
+#![allow(soft_unstable)]
+
 extern crate rustc_serialize;
 extern crate docopt;
 
